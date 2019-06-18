@@ -18,6 +18,9 @@ const contact = new mongoose.Schema({
   },
   updatedAt: {
     type: Date
+  },
+  in_sagoon: {
+    type: Boolean
   }
 });
 module.exports = mongoose.model("Contacts", contact, "Contacts");

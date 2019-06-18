@@ -1,5 +1,18 @@
 const contacts = require("../models/contact");
 
+const axios = require('axios')
+
+const checkNumber = (data, count, device_id) => {
+  if (data.length <= count) {
+    return data;
+  }
+
+  delete data[count]._id;
+  data[count].device_id = device_id;
+
+  return checkNumber(data, count, device_id);
+};
+
 module.exports = (sqs, queueUrl) => {
   const params = {
     QueueUrl: queueUrl,
@@ -14,12 +27,11 @@ module.exports = (sqs, queueUrl) => {
       console.log("Message Received::::::::", MessageId);
 
       const { device_id, contact_list } = JSON.parse(Body);
-      await contacts.create(
-        contact_list.map(contact => {
+        const d = await contact_list.map(async contact => {
           delete contact._id;
-          return { ...contact, device_id };
-        })
-      );
+          const res = await axios.get(`https://api.sagoon.com/MobileNumber/mobileNumberStatus/${contact.raw_input}/IN`).then((result) => result);
+          await contacts.create({ ...contact, in_sagoon: res.data.in_sagoon, device_id });
+        });
 
       var deleteParams = {
         QueueUrl: queueUrl,
