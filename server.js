@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const app = express();
 const aws = require("aws-sdk");
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
 // const fs = require("fs");
 
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
@@ -18,26 +19,76 @@ const { DB } = require("./constants");
 // Load your AWS credentials and try to instantiate the object.
 aws.config.loadFromPath(__dirname + "/config.json");
 
+const jwtErrorResponse = {
+  status: 2,
+  message: "Unauthorize Access",
+  errors: "Token is not valid for this user."
+};
+
 // Instantiate SQS.
 const sqs = new aws.SQS();
 
+// app.post("/test", (req, res) => {
+//   // console.log("Body::::::", req.body);
+//   console.log("Headers::::::::::", req.headers["device-id"]);
+//   const deviceId = req.headers["device-id"];
+//   const authorization = req.headers["authorization"];
+
+//   if (authorization && deviceId) {
+//     const bearer = authorization.split(" ");
+//     const token = bearer[1];
+
+//     try {
+//       var decoded = jwt.verify(token, "AZWEC854ZXM052");
+//       console.log(decoded);
+//       if (decoded.deviceId === deviceId) {
+//         res.json(decoded);
+//       } else {
+//         res.json(jwtErrorResponse);
+//       }
+//     } catch (err) {
+//       res.json(jwtErrorResponse);
+//     }
+//   } else {
+//     res.json(jwtErrorResponse);
+//     // res.sendStatus(403);
+//   }
+// });
+
 // Creating a queue.
 app.post("/create", (req, res) => {
-  const payload = req.body;
-  createQueue(sqs, (err, data) => {
-    if (err) {
-      res.send(err);
-    } else {
-      res.send(data);
+  const deviceId = req.headers["device-id"];
+  const authorization = req.headers["authorization"];
 
-      //   payload.contact_list.forEach((contact) => {
-      // sendMessage(sqs, data.QueueUrl, JSON.stringify({...contact, device_id: payload.device_id}));
-      //   });
+  if (authorization && deviceId) {
+    const bearer = authorization.split(" ");
+    const token = bearer[1];
 
-      sendMessage(sqs, data.QueueUrl, JSON.stringify(payload));
-    //   receiveMessage(sqs, data.QueueUrl);
+    try {
+      var decoded = jwt.verify(token, "AZWEC854ZXM052");
+      if (decoded.deviceId === deviceId) {
+
+        const payload = req.body;
+        payload.token = token;
+        payload.device_id = decoded.deviceId;
+        
+        createQueue(sqs, (err, data) => {
+          if (err) {
+            res.send(err);
+          } else {
+            res.send(data);
+            sendMessage(sqs, data.QueueUrl, JSON.stringify(payload));
+          }
+        });
+      } else {
+        res.json(jwtErrorResponse);
+      }
+    } catch (err) {
+      res.json(jwtErrorResponse);
     }
-  });
+  } else {
+    res.json(jwtErrorResponse);
+  }
 });
 
 app.get("/empty", (req, res) => {
