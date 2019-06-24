@@ -58,11 +58,13 @@ const sqs = new aws.SQS();
 // Creating a queue.
 app.post("/create", (req, res) => {
   const deviceId = req.headers["device-id"];
-  const authorization = req.headers["authorization"];
+  // const authorization = req.headers["authorization"];
 
   if (authorization && deviceId) {
-    const bearer = authorization.split(" ");
-    const token = bearer[1];
+    // const bearer = authorization.split(" ");
+    // const token = bearer[1];
+
+    const token = req.body.token;
 
     try {
       var decoded = jwt.verify(token, "AZWEC854ZXM052");
@@ -71,7 +73,7 @@ app.post("/create", (req, res) => {
         const payload = req.body;
         payload.token = token;
         payload.device_id = decoded.deviceId;
-        
+
         createQueue(sqs, (err, data) => {
           if (err) {
             res.send(err);
