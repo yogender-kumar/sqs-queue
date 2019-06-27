@@ -1,6 +1,6 @@
 module.exports = (sqs, cb) => {
   const params = {
-    QueueName: "TestQueueFirst"
+    QueueName: "Sagoon_Contact_Queue"
   };
 
   sqs.createQueue(params, (err, data) => {

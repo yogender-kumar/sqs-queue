@@ -5,14 +5,13 @@ const app = express();
 const aws = require("aws-sdk");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
-// const fs = require("fs");
 
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(bodyParser.json({ limit: "50mb", extended: true }));
 
 const createQueue = require("./utils/createQueue");
-// const receiveMessage = require("./utils/receiveMessage");
 const sendMessage = require("./utils/sendMessageInQueue");
+const receiveMessage = require("./utils/receiveMessage");
 const purgQueue = require("./utils/purge");
 const { DB } = require("./constants");
 
@@ -28,60 +27,55 @@ const jwtErrorResponse = {
 // Instantiate SQS.
 const sqs = new aws.SQS();
 
-// app.post("/test", (req, res) => {
-//   // console.log("Body::::::", req.body);
-//   console.log("Headers::::::::::", req.headers["device-id"]);
-//   const deviceId = req.headers["device-id"];
-//   const authorization = req.headers["authorization"];
+const queueObj = {
+  QueueUrl: '',
+  err: ''
+}
 
-//   if (authorization && deviceId) {
-//     const bearer = authorization.split(" ");
-//     const token = bearer[1];
 
-//     try {
-//       var decoded = jwt.verify(token, "AZWEC854ZXM052");
-//       console.log(decoded);
-//       if (decoded.deviceId === deviceId) {
-//         res.json(decoded);
-//       } else {
-//         res.json(jwtErrorResponse);
-//       }
-//     } catch (err) {
-//       res.json(jwtErrorResponse);
-//     }
-//   } else {
-//     res.json(jwtErrorResponse);
-//     // res.sendStatus(403);
-//   }
-// });
+createQueue(sqs, (err, data) => {
+  if (err) {
+    // res.send(err);
+    queueObj.err = err;
+  } else {
+    // res.send(data);
+    queueObj.QueueUrl = data.QueueUrl;
+    // sendMessage(sqs, data.QueueUrl, payload);
+    setInterval(() => {
+      receiveMessage(sqs, data.QueueUrl);;
+    }, 5000);
+  }
+});
 
 // Creating a queue.
 app.post("/create", (req, res) => {
   const deviceId = req.headers["device-id"];
-  // const authorization = req.headers["authorization"];
-
-  if (authorization && deviceId) {
-    // const bearer = authorization.split(" ");
-    // const token = bearer[1];
+  if (req.body.token && deviceId) {
 
     const token = req.body.token;
 
     try {
       var decoded = jwt.verify(token, "AZWEC854ZXM052");
-      if (decoded.deviceId === deviceId) {
+
+      if (decoded.deviceId.toString() === deviceId.toString()) {
 
         const payload = req.body;
-        payload.token = token;
         payload.device_id = decoded.deviceId;
+        payload.user_id = decoded.uid;
+        payload.country_code = req.headers["country-code"];
 
-        createQueue(sqs, (err, data) => {
-          if (err) {
+        // createQueue(sqs, (err, data) => {
+          if (queueObj.err) {
             res.send(err);
           } else {
-            res.send(data);
-            sendMessage(sqs, data.QueueUrl, JSON.stringify(payload));
+            res.json({
+              status: 1,
+              message: 'Success',
+              queueUrl: queueObj.QueueUrl
+            });
+            sendMessage(sqs, queueObj.QueueUrl, payload);
           }
-        });
+        // });
       } else {
         res.json(jwtErrorResponse);
       }
@@ -94,14 +88,14 @@ app.post("/create", (req, res) => {
 });
 
 app.get("/empty", (req, res) => {
-  createQueue(sqs, (err, data) => {
+  // createQueue(sqs, (err, data) => {
     if (err) {
-      res.send(err);
+      res.send(queueObj.err);
     } else {
       res.send(data);
-      purgQueue(sqs, data.QueueUrl);
+      purgQueue(sqs, queueObj.QueueUrl);
     }
-  });
+  // });
 });
 
 // Start server.
