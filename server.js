@@ -3,7 +3,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
 const aws = require("aws-sdk");
-const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
@@ -13,7 +12,6 @@ const createQueue = require("./utils/createQueue");
 const sendMessage = require("./utils/sendMessageInQueue");
 const receiveMessage = require("./utils/receiveMessage");
 const purgQueue = require("./utils/purge");
-const { DB } = require("./constants");
 
 // Load your AWS credentials and try to instantiate the object.
 aws.config.loadFromPath(__dirname + "/config.json");
@@ -100,16 +98,16 @@ app.get("/empty", (req, res) => {
 
 // Start server.
 
-mongoose.connect(`${DB.PROTOCOL}${DB.DOMAIN}${DB.PORT}/${DB.DATABASE}`, err => {
-  if (err) {
-    console.log("DB connection Error");
-    process.exit(1);
-  } else {
+// mongoose.connect(`${DB.PROTOCOL}${DB.DOMAIN}${DB.PORT}/${DB.DATABASE}`, err => {
+//   if (err) {
+//     console.log("DB connection Error");
+//     process.exit(1);
+//   } else {
     const server = app.listen(8080, () => {
       const host = server.address().address;
       const port = server.address().port;
 
       console.log("AWS SQS example app listening at http://%s:%s", host, port);
     });
-  }
-});
+//   }
+// });
