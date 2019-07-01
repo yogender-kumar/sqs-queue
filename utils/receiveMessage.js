@@ -88,21 +88,43 @@ module.exports = (sqs, queueUrl) => {
       //   };
       // });
 
+      /**
+       * This code is used for single process for each record in dynamoDB
+       */
+
+      // const contactsList = promises
+      //   .filter(result => {
+      //     if(!(result instanceof Error) || typeof result.data === 'string'){
+      //       return false;
+      //     }
+      //     return true;
+      //   })
+      //   .map(({ data: { ...r } }) => {
+      //     return {
+      //       id: { S: uniqid() },
+      //       userId: { S: rest.user_id},
+      //       [rest.user_id]: { S: JSON.stringify({ ...r, ...rest }) }
+      //     };
+      //   });
+
+      /**
+       * This code is used for batch process in dynamoDB
+       */
       const contactsList = promises
         .filter(result => {
-          if(!(result instanceof Error) || typeof result.data === 'string'){
+          if (!(result instanceof Error) || typeof result.data === "string") {
             return false;
           }
           return true;
         })
-        .map(({ data: { ...r } }) => {
-          return {
-            id: { S: uniqid() },
-            [rest.user_id]: { S: JSON.stringify({ ...r, ...rest }) }
-          };
-        });
-
-      
+        .map(({ data: { ...r } }) => ({
+          PutRequest: {
+            Item: {
+              id: { S: uniqid() },
+              [rest.user_id]: { S: JSON.stringify({ ...r, ...rest }) }
+            }
+          }
+        }));
 
       await contacts.create(contactsList);
 
