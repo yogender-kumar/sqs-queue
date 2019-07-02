@@ -4,7 +4,6 @@ module.exports = (sqs, queueUrl) => {
   };
 
   sqs.purgeQueue(params, (err, data) => {
-
-    console.log(err, '==========', data);
+    console.log("Remove all messages from Queue::::", data);
   });
 };

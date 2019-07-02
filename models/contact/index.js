@@ -1,12 +1,26 @@
-var AWS = require("aws-sdk");
+const aws = require("aws-sdk");
 
-AWS.config.update({
-  region: "us-west-1"
-});
+aws.config.region = "us-west-1";
 
-var dynamodb = new AWS.DynamoDB();
+var dynamodb = new aws.DynamoDB();
 
-// dynamodb.createTable({ TableName: "Contacts" });
+dynamodb.createTable(
+  {
+    TableName: "Contacts",
+    KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
+    AttributeDefinitions: [{ AttributeName: "id", AttributeType: "S" }],
+    ProvisionedThroughput: {
+      ReadCapacityUnits: 5,
+      WriteCapacityUnits: 5
+    }
+  },
+  (err, res) => {
+    if (err && err.code !== "ResourceInUseException") {
+      console.log(err);
+      process.exit(1);
+    }
+  }
+);
 
 module.exports = {
   create: async data => {
@@ -16,38 +30,15 @@ module.exports = {
       }
     };
 
-    new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       dynamodb.batchWriteItem(params, function(err, data) {
         if (err) {
-          reject(err);
+          console.log(err);
+          reject(err.message);
         } else {
           resolve(data);
         }
       });
-    });
-
-    const contactsList = promises
-        .filter(result => !(result instanceof Error))
-        .map(({ data: { ...rest } }) => ({
-          PutRequest: {
-            Item: {
-              id: { S: uniqid() },
-              [rest.user_id]: { S: JSON.stringify(rest) }
-            }
-          }
-        }));
-
-    // data.forEach(item => {
-    //   const params = {
-    //     TableName: "Contacts",
-    //     Item: { ...item }
-    //   };
-    //   dynamodb.putItem(
-    //     params,
-    //     function(err, data) {
-    //       err && console.log(err);
-    //     }
-    //   );
-    // });
+    }).catch(err => console.log(err));
   }
 };
