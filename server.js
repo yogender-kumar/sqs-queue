@@ -55,10 +55,10 @@ app.post("/create", (req, res) => {
     try {
       var decoded = jwt.verify(token, "AZWEC854ZXM052");
 
-      if (decoded.deviceId.toString() === deviceId.toString()) {
+      if (decoded.deviceID.toString() === deviceId.toString()) {
 
         const payload = req.body;
-        payload.device_id = decoded.deviceId;
+        payload.device_id = decoded.deviceID;
         payload.user_id = decoded.uid;
         payload.country_code = req.headers["country-code"];
 
