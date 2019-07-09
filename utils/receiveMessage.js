@@ -3,6 +3,8 @@ const contacts = require("../models/contact");
 const axios = require("axios");
 const uniqid = require("uniqid");
 
+const CONSTANTS = require("../constants");
+
 const checkNumber = (data, count, device_id) => {
   if (data.length <= count) {
     return data;
@@ -38,7 +40,7 @@ module.exports = (sqs, queueUrl) => {
 
           return axios
             .post(
-              `https://dev.sagoon.com/MobileNumber/phoneNumberStatus`,
+              `${CONSTANTS.API.URL}`,
               payload
             )
             .catch(err => err);

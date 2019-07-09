@@ -1,8 +1,5 @@
 module.exports = {
-  DB: {
-    PROTOCOL: "mongodb://",
-    DOMAIN: "localhost",
-    PORT: ":27017",
-    DATABASE: "sagoon"
+  API: {
+    URL: 'https://dev.sagoon.com/MobileNumber/phoneNumberStatus'
   }
 };
