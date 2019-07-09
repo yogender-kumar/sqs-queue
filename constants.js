@@ -1,5 +1,5 @@
 module.exports = {
   API: {
-    URL: 'https://dev.sagoon.com/MobileNumber/phoneNumberStatus'
+    URL: process.env.PHONE_STATUS_API_URL
   }
 };
