@@ -56,7 +56,7 @@ app.post("/create", (req, res) => {
         payload.user_id = decoded.uid;
         payload.country_code = req.headers["country-code"];
         if (queueObj.err) {
-          res.send(err);
+          res.send(queueObj.err);
         } else {
           res.json({
             status: 1,

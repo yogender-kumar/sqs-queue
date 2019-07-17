@@ -24,21 +24,51 @@ dynamodb.createTable(
 
 module.exports = {
   create: async data => {
-    const params = {
-      RequestItems: {
-        Contacts: [...data]
-      }
-    };
+    // const params = {
+    //   RequestItems: {
+    //     Contacts: [...data]
+    //   }
+    // };
 
-    return await new Promise((resolve, reject) => {
-      dynamodb.batchWriteItem(params, function(err, data) {
-        if (err) {
-          console.log(err);
-          reject(err.message);
-        } else {
-          resolve(data);
-        }
-      });
-    }).catch(err => console.log(err));
+    // console.log(params);
+
+    // return await new Promise((resolve, reject) => {
+    //   dynamodb.batchWriteItem(params, function(err, data) {
+    //     console.log(err, '=-=-=-=-=-=-=', data);
+    //     if (err) {
+    //       console.log(err);
+    //       reject(err.message);
+    //     } else {
+    //       resolve(data);
+    //     }
+    //   });
+    // }).catch(err => console.log(err));
+
+    return await Promise.all([
+      ...data.map(item =>
+        new Promise((resolve, reject) => {
+          dynamodb.putItem(
+            {
+              ...item,
+              TableName: "Contacts"
+            },
+            function(err, data) {
+              if (err) {
+                reject(err.message);
+              } else {
+                resolve(data);
+              }
+            }
+          );
+        }).catch(err => console.log(err))
+      )
+    ]);
+
+    // dynamodb.putItem(
+    //     params,
+    //     function(err, data) {
+    //       err && console.log(err);
+    //     }
+    //   );
   }
 };

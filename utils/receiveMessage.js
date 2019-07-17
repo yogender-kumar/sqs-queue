@@ -38,12 +38,7 @@ module.exports = (sqs, queueUrl) => {
             ...rest
           };
 
-          return axios
-            .post(
-              `${CONSTANTS.API.URL}`,
-              payload
-            )
-            .catch(err => err);
+          return axios.post(`${CONSTANTS.API.URL}`, payload).catch(err => err);
         })
       );
 
@@ -59,14 +54,19 @@ module.exports = (sqs, queueUrl) => {
         })
         .map(({ data: { ...r } }) => {
           return {
-            PutRequest: {
-              Item: {
-                id: { S: uniqid() },
-                [rest.user_id]: { S: JSON.stringify({ ...r, ...rest }) }
-              }
+            // PutRequest: {
+            //   Item: {
+            //     id: { S: uniqid() },
+            //     [rest.user_id]: { S: JSON.stringify({ ...r, ...rest }) }
+            //   }
+            // }
+            Item: {
+              id: { S: uniqid() },
+              [rest.user_id]: { S: JSON.stringify({ ...r, ...rest }) }
             }
           };
         });
+        
       if (contactsList.length) {
         await contacts.create(contactsList);
       }
