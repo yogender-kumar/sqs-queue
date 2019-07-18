@@ -14,7 +14,13 @@ const receiveMessage = require("./utils/receiveMessage");
 const purgQueue = require("./utils/purge");
 
 // Load your AWS credentials and try to instantiate the object.
-aws.config.loadFromPath(__dirname + "/config.json");
+// aws.config.loadFromPath(__dirname + "/config.json");
+
+aws.config({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_KEY,
+  region: process.env.AWS_REGION
+});
 
 const jwtErrorResponse = {
   status: 2,
